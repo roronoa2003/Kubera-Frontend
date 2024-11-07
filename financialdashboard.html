@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubera Financial Manager - Financial Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 0;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .navbar {
+            background-color: #161b22;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar a {
+            color: #c9d1d9;
+            text-decoration: none;
+            padding: 0.5em 1em;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #58a6ff;
+        }
+
+        .container {
+            padding: 2em;
+            max-width: 800px;
+            margin: 4em auto;
+            background: #21262d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideIn 1.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 1em;
+            margin-top: 1em;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: #30363d;
+            color: #c9d1d9;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            margin-top: 2em;
+            padding: 1em;
+            width: 100%;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2ea043;
+        }
+
+        #response {
+            margin-top: 2em;
+            padding: 1.5em;
+            background-color: #161b22;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            font-size: 1em;
+        }
+
+        .investment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+
+        .investment-table th, .investment-table td {
+            border: 1px solid #444;
+            padding: 0.5em;
+            text-align: left;
+        }
+
+        .investment-table th {
+            background-color: #30363d;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo"><a href="#">Kubera Financial Manager</a></div>
+        <div class="nav-links">
+            <a href="expense_manager.html">Expense Manager</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\newsportfolio.html">Portfolio News Extractor</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\financialdashboard.html">Financial Dashboard</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\Kubera.html">Kubera AI</a>
+	    <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\transactionanalysis.html">Transaction Analysizer</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\Signup.html">Sign Up</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-header">
+            <h2>Financial Dashboard</h2>
+            <p>Upload your financial portfolio data to analyze and get insights.</p>
+        </div>
+        <input type="file" id="portfolioFile" accept=".csv, .xlsx, .xls">
+        <button onclick="analyzePortfolio()">Analyze Portfolio</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        async function analyzePortfolio() {
+            const portfolioFile = document.getElementById("portfolioFile").files[0];
+            const responseDiv = document.getElementById("response");
+            responseDiv.innerHTML = "<p>Loading...</p>";
+
+            if (!portfolioFile) {
+                responseDiv.innerHTML = "<p>Please upload a file to analyze.</p>";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", portfolioFile);
+
+            try {
+                const response = await fetch("http://localhost:3000/analyzePortfolio", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to analyze portfolio");
+                }
+
+                const responseData = await response.json();
+                const { totalInvestment, totalCurrentValue, overallROI, investments } = responseData.result;
+
+                let htmlContent = `
+                    <p>Total Investment: ${totalInvestment}</p>
+                    <p>Total Current Value: ${totalCurrentValue}</p>
+                    <p>Overall ROI: ${overallROI}%</p>
+                    <table class="investment-table">
+                        <thead>
+                            <tr>
+                                <th>Investment Name</th>
+                                <th>Amount Invested</th>
+                                <th>Current Value</th>
+                                <th>ROI (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                investments.forEach(investment => {
+                    htmlContent += `
+                        <tr>
+                            <td>${investment.name}</td>
+                            <td>${investment.amountInvested}</td>
+                            <td>${investment.currentValue}</td>
+                            <td>${investment.roi}</td>
+                        </tr>
+                    `;
+                });
+
+                htmlContent += `</tbody></table>`;
+                responseDiv.innerHTML = htmlContent;
+            } catch (error) {
+                responseDiv.innerHTML = `<p>An error occurred: ${error.message}</p>`;
+            }
+        }
+    </script>
+
+    <script>
+        // Backend logic equivalent (this would ideally be implemented as a separate backend server)
+        const express = require('express');
+        const multer = require('multer');
+        const cors = require('cors');
+        const xlsx = require('xlsx');
+        const fs = require('fs');
+        const path = require('path');
+
+        const app = express();
+        const PORT = process.env.PORT || 3000;
+
+        app.use(cors());
+
+        const upload = multer({ dest: 'uploads/' });
+
+        app.post('/analyzePortfolio', upload.single('file'), async (req, res) => {
+            try {
+                if (!req.file) {
+                    return res.status(400).json({ message: 'No file uploaded' });
+                }
+
+                const filePath = path.join(__dirname, req.file.path);
+                const workbook = xlsx.readFile(filePath);
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const data = xlsx.utils.sheet_to_json(sheet);
+
+                let totalInvestment = 0;
+                let totalCurrentValue = 0;
+                let investments = [];
+
+                data.forEach(row => {
+                    const investment = {
+                        name: row['Stock Name'] || row['Investment Name'],
+                        amountInvested: parseFloat(row['Investment Amount'] || 0),
+                        currentValue: parseFloat(row['Current Value'] || 0),
+                        roi: parseFloat(row['ROI (%)'] || 0)
+                    };
+
+                    totalInvestment += investment.amountInvested;
+                    totalCurrentValue += investment.currentValue;
+                    investments.push(investment);
+                });
+
+                const overallROI = ((totalCurrentValue - totalInvestment) / totalInvestment) * 100;
+
+                const analysisResult = {
+                    totalInvestment: totalInvestment.toFixed(2),
+                    totalCurrentValue: totalCurrentValue.toFixed(2),
+                    overallROI: overallROI.toFixed(2),
+                    investments
+                };
+
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        console.error('Error deleting file:', err);
+                    }
+                });
+
+                res.json({ result: analysisResult });
+            } catch (error) {
+                console.error('Error analyzing the portfolio:', error);
+                res.status(500).json({ message: 'Failed to analyze the portfolio', error: error.message });
+            }
+        });
+
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    </script>
+</body>
+</html>

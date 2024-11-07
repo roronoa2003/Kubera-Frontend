@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubera Financial Manager - Portfolio News Extractor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 0;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .navbar {
+            background-color: #161b22;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar a {
+            color: #c9d1d9;
+            text-decoration: none;
+            padding: 0.5em 1em;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #58a6ff;
+        }
+
+        .container {
+            padding: 2em;
+            max-width: 600px;
+            margin: 4em auto;
+            background: #21262d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideIn 1.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .form-header img {
+            width: 120px;
+            margin-bottom: 1em;
+            opacity: 0;
+            animation: fadeInLogo 1.5s ease forwards 0.5s;
+        }
+
+        @keyframes fadeInLogo {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        input[type="file"] {
+            margin-top: 1em;
+            color: #c9d1d9;
+        }
+
+        button {
+            margin-top: 2em;
+            padding: 1em;
+            width: 100%;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2ea043;
+        }
+
+        #response {
+            margin-top: 2em;
+            padding: 1.5em;
+            background-color: #161b22;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            font-size: 1em;
+        }
+
+        .news-section {
+            margin-top: 2em;
+        }
+
+        .news-section h3 {
+            color: #58a6ff;
+            margin-bottom: 1em;
+        }
+
+        .news-article {
+            margin-bottom: 1em;
+            padding: 1em;
+            background-color: #30363d;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .news-article h4 {
+            margin: 0 0 0.5em;
+            color: #c9d1d9;
+        }
+
+        .news-article p {
+            margin: 0;
+            color: #b1b1b1;
+        }
+
+        #loadMoreButton {
+            margin-top: 1em;
+            display: none;
+            padding: 1em;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.3s ease;
+        }
+
+        #loadMoreButton:hover {
+            background-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo"><a href="#">Kubera Financial Manager</a></div>
+        <div class="nav-links">
+            <a href="expense_manager.html">Expense Manager</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\newsportfolio.html">Portfolio News Extractor</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\financialdashboard.html">Financial Dashboard</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\Kubera.html">Kubera AI</a>
+	    <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\transactionanalysis.html">Transaction Analysizer</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\Signup.html">Sign Up</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-header">
+            <img src="kubera.png" alt="Kubera Logo">
+            <h2>Portfolio News Extractor</h2>
+            <p>Upload an image of your portfolio to extract news and run an urgency detection model on it.</p>
+        </div>
+        <input type="file" id="portfolioImage" accept="image/*">
+        <button onclick="processPortfolioImage()">Upload and Analyze</button>
+        <div id="response"></div>
+        <button id="loadMoreButton" onclick="loadMoreArticles()">Load More Articles</button>
+    </div>
+
+    <script>
+        let currentCompany = "";
+        let currentPage = 1;
+
+        async function processPortfolioImage() {
+            const fileInput = document.getElementById("portfolioImage");
+            const responseDiv = document.getElementById("response");
+            const loadMoreButton = document.getElementById("loadMoreButton");
+
+            if (fileInput.files.length === 0) {
+                responseDiv.innerHTML = `<p style='color: #ff1744;'>Please select an image to upload.</p>`;
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            responseDiv.innerHTML = `<p style='color: #58a6ff;'>Uploading and analyzing...</p>`;
+            loadMoreButton.style.display = "none";
+
+            try {
+                // Call the backend server to process the image
+                const backendUrl = "http://localhost:3000/processPortfolioImage";
+                const response = await fetch(backendUrl, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
+                }
+
+                const responseData = await response.json();
+                const newsResults = responseData.result;
+                responseDiv.innerHTML = "";
+
+                newsResults.forEach(companyNews => {
+                    const companyLink = document.createElement("a");
+                    companyLink.href = "#";
+                    companyLink.textContent = `News for ${companyNews.company}`;
+                    companyLink.style.color = "#58a6ff";
+                    companyLink.style.display = "block";
+                    companyLink.addEventListener("click", () => {
+                        currentCompany = companyNews.company;
+                        currentPage = 1;
+                        fetchCompanyNews(currentCompany, currentPage);
+                    });
+                    
+                    responseDiv.appendChild(companyLink);
+                });
+            } catch (error) {
+                responseDiv.innerHTML = `<p>An error occurred: ${error.message}</p>`;
+            }
+        }
+
+        async function fetchCompanyNews(companyName, page) {
+            const responseDiv = document.getElementById("response");
+            const loadMoreButton = document.getElementById("loadMoreButton");
+            responseDiv.innerHTML = `<p style='color: #58a6ff;'>Fetching news for ${companyName}...</p>`;
+            loadMoreButton.style.display = "none";
+
+            try {
+                // Call the backend server to get news articles for the company
+                const backendUrl = `http://localhost:3000/company/${encodeURIComponent(companyName)}?page=${page}`;
+                const response = await fetch(backendUrl);
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
+                }
+
+                const responseData = await response.json();
+                responseDiv.innerHTML = `<h3>News for ${responseData.companyName}</h3>`;
+
+                responseData.articles.forEach(article => {
+                    const articleDiv = document.createElement("div");
+                    articleDiv.classList.add("news-article");
+
+                    const articleTitle = document.createElement("h4");
+                    articleTitle.textContent = article.title;
+                    articleDiv.appendChild(articleTitle);
+
+                    const articleDescription = document.createElement("p");
+                    articleDescription.textContent = article.description;
+                    articleDiv.appendChild(articleDescription);
+
+                    responseDiv.appendChild(articleDiv);
+                });
+
+                if (responseData.hasMore) {
+                    loadMoreButton.style.display = "block";
+                } else {
+                    loadMoreButton.style.display = "none";
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<p>An error occurred: ${error.message}</p>`;
+            }
+        }
+
+        function loadMoreArticles() {
+            currentPage += 1;
+            fetchCompanyNews(currentCompany, currentPage);
+        }
+    </script>
+</body>
+</html>

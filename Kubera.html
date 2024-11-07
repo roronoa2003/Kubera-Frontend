@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubera Financial Manager - Kubera AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 0;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .navbar {
+            background-color: #161b22;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar a {
+            color: #c9d1d9;
+            text-decoration: none;
+            padding: 0.5em 1em;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #58a6ff;
+        }
+
+        .container {
+            padding: 2em;
+            max-width: 600px;
+            margin: 4em auto;
+            background: #21262d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideIn 1.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .form-header img {
+            width: 120px;
+            margin-bottom: 1em;
+            opacity: 0;
+            animation: fadeInLogo 1.5s ease forwards 0.5s;
+        }
+
+        @keyframes fadeInLogo {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 1em;
+            margin-top: 1em;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: #30363d;
+            color: #c9d1d9;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border: 2px solid #58a6ff;
+        }
+
+        button {
+            margin-top: 2em;
+            padding: 1em;
+            width: 100%;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2ea043;
+        }
+
+        #response {
+            margin-top: 2em;
+            padding: 1.5em;
+            background-color: #161b22;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo"><a href="#">Kubera Financial Manager</a></div>
+        <div class="nav-links">
+            <a href="expense_manager.html">Expense Manager</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\newsportfolio.html">Portfolio News Extractor</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\financialdashboard.html">Financial Dashboard</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\Kubera.html">Kubera AI</a>
+	    <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\transactionanalysis.html">Transaction Analysizer</a>
+            <a href="C:\Users\Rohan\OneDrive\Desktop\kubera\Signup.html">Sign Up</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-header">
+            <img src="C:\Users\Rohan\OneDrive\Desktop\kubera\kubera.png" alt="Kubera Logo">
+            <h2>Kubera AI Assistant</h2>
+            <p>Ask me about a financial term, and I'll explain it in simple terms!</p>
+        </div>
+        <input type="text" id="userInput" placeholder="Enter a financial term...">
+        <button onclick="getCoherenceResponse()">Ask Kubera AI</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        async function getCoherenceResponse() {
+            const userInput = document.getElementById("userInput").value;
+            const responseDiv = document.getElementById("response");
+            responseDiv.innerHTML = `<p style='color: #58a6ff;'>Loading...</p>`;
+
+            try {
+                const prompt = `Respond only to finance-related terms. If the query is not related to finance, simply reply with 'Not a financial term.' Avoid providing explanations or significance for anything outside of finance. : ${userInput}`;
+                const apiRequestJson = {
+                    model: "command-xlarge-nightly",
+                    prompt: prompt,
+                    max_tokens: 100,
+                    temperature: 0.7
+                };
+
+                // Call the backend server that acts as a proxy to the Coherence API
+                const backendUrl = "http://localhost:3000/coherenceapi";
+                const response = await fetch(backendUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(apiRequestJson)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
+                }
+
+                const responseData = await response.json();
+                if (responseData.generations && responseData.generations.length > 0) {
+                    const coherenceResponse = responseData.generations[0].text.trim();
+                    responseDiv.innerHTML = `<p>Kubera AI: ${coherenceResponse}</p>`;
+                } else {
+                    throw new Error("Invalid response format from API");
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<p>An error occurred: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
